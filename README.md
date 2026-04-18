@@ -126,5 +126,5 @@ Contributions, issues, and feature requests are welcome! Feel free to check the 
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
 
 <div align="center">
-  <i>Developed with ❤️ by Selvakumar</i>
+  <i>Created by Selvakumar S</i>
 </div>
