@@ -1,27 +1,24 @@
-<div align="center">
-  <br />
-    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Django_logo.svg/1200px-Django_logo.svg.png" alt="Django Logo" width="200">
+﻿<div align="center">
   <br />
   <h1>🏢 Complaint Management System</h1>
   <p>
     <strong>A robust, role-based organizational complaint tracking system built with Django.</strong>
   </p>
   <p>
-    <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" /></a>
-    <a href="https://www.djangoproject.com/"><img src="https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white" alt="Django" /></a>
-    <a href="https://getbootstrap.com/"><img src="https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white" alt="Bootstrap" /></a>
-    <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="License" /></a>
+    <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
+    <img src="https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white" alt="Django" />
+    <img src="https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white" alt="Bootstrap" />
+    <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="License" />
   </p>
 </div>
 
-<hr />
+---
 
 ## 📖 Table of Contents
 - [About the Project](#-about-the-project)
 - [Key Features](#-key-features)
 - [Tech Stack](#-tech-stack)
 - [User Roles & Permissions](#-user-roles--permissions)
-- [Screenshots](#-screenshots)
 - [Getting Started](#-getting-started)
 - [Contributing](#-contributing)
 - [License](#-license)
@@ -38,12 +35,13 @@ The **Complaint Management System** is a streamlined web application designed to
 - 📱 **Responsive UI:** Fully responsive interface built with Bootstrap 5.
 
 ## 💻 Tech Stack
+
 | Category | Technology |
 | --- | --- |
 | **Backend** | Python, Django 5.0+ |
 | **Frontend** | HTML5, CSS3, Django Templates, Bootstrap 5 |
-| **Database** | SQLite3 (Configurable for PostgreSQL) |
-| **Utilities** | Pillow (Image Processing), django-environ |
+| **Database** | SQLite3 |
+| **Utilities** | Pillow, django-environ |
 
 ## 👥 User Roles & Permissions
 
@@ -62,13 +60,7 @@ The **Complaint Management System** is a streamlined web application designed to
 - View the real-time status of their own complaints.
 - Reply with remarks for further clarification.
 
-## 📸 Screenshots
-*(Add screenshots of your application here)*
-> **Pro Tip:** Include screenshots of the Dashboard, Complaint Submission Form, and the Remarks section.
-
 ## 🚀 Getting Started
-
-Follow these instructions to get a copy of the project up and running on your local machine for development and testing.
 
 ### Prerequisites
 - Python 3.8 or higher installed on your system.
