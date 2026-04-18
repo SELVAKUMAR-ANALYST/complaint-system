@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Raise Complaint - CMS Pro{% endblock %}
+{% block page_title %}Raise New Complaint{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card-glass p-4 fade-in-up">
+            <h4 class="mb-4">Complaint Details</h4>
+            
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="mb-4">
+                    <label class="form-label text-secondary small">Category</label>
+                    <div class="row g-3">
+                        <div class="col-6 col-md-3">
+                            <label class="w-100 cursor-pointer text-center">
+                                <input type="radio" name="category" value="IT" class="d-none" checked>
+                                <div class="role-card">
+                                    <i class="fas fa-laptop"></i>
+                                    <span class="small fw-bold">IT Support</span>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="w-100 cursor-pointer text-center">
+                                <input type="radio" name="category" value="HR" class="d-none">
+                                <div class="role-card">
+                                    <i class="fas fa-users"></i>
+                                    <span class="small fw-bold">HR Dept</span>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="w-100 cursor-pointer text-center">
+                                <input type="radio" name="category" value="FACILITY" class="d-none">
+                                <div class="role-card">
+                                    <i class="fas fa-building"></i>
+                                    <span class="small fw-bold">Facility</span>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="w-100 cursor-pointer text-center">
+                                <input type="radio" name="category" value="OTHER" class="d-none">
+                                <div class="role-card">
+                                    <i class="fas fa-list-ul"></i>
+                                    <span class="small fw-bold">Other</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label text-secondary small">Subject / Title</label>
+                    {{ form.title }}
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label text-secondary small">Detailed Description</label>
+                    {{ form.description }}
+                    <div class="text-end mt-1">
+                        <small class="text-secondary" id="charCount">0 characters</small>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-premium w-100 py-3 mt-2">
+                    Submit Complaint
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const textarea = document.querySelector('textarea');
+    const charCount = document.getElementById('charCount');
+    
+    textarea.addEventListener('input', () => {
+        charCount.textContent = `${textarea.value.length} characters`;
+    });
+</script>
+{% endblock %}

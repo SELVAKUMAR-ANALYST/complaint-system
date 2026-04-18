@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Complaint Data - CMS Pro{% endblock %}
+{% block page_title %}Ticket REF-{{ complaint.id|stringformat:"05d" }}{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-5 stagger-1 fade-in-up">
+    <!-- Center Col: Primary Info -->
+    <div class="col-lg-8">
+        <div class="card-glass p-5 mb-4" style="background: rgba(30, 41, 59, 0.4); border-color: rgba(99, 102, 241, 0.2);">
+            <div class="d-flex justify-content-between align-items-start mb-5">
+                <div>
+                    <span class="badge bg-primary-accent bg-opacity-10 text-primary-accent border border-primary-accent border-opacity-25 px-3 py-2 rounded mb-3 small fw-bold">
+                        <i class="fas fa-tag me-2"></i> {{ complaint.get_category_display }}
+                    </span>
+                    <h2 class="display-6 fw-800 text-white mb-0" style="letter-spacing: -1px;">{{ complaint.title }}</h2>
+                </div>
+                <div class="text-end">
+                    <div class="badge-pill bg-{{ complaint.status|lower }} px-4 py-2 fs-6">
+                        {{ complaint.get_status_display }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-5">
+                <h6 class="text-secondary small fw-800 text-uppercase mb-3" style="letter-spacing: 0.1em;">Investigation Details</h6>
+                <div class="p-4 rounded-4" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.03); border-left: 4px solid var(--primary-accent);">
+                    <p class="text-white mb-0 fs-5 lh-base" style="white-space: pre-wrap;">{{ complaint.description }}</p>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card-glass p-3 text-center" style="background: rgba(15, 23, 42, 0.3);">
+                        <i class="far fa-calendar-alt text-primary-accent mb-2 fs-4"></i>
+                        <div class="text-secondary small fw-bold mb-1">Logged On</div>
+                        <div class="text-white small fw-bold">{{ complaint.created_at|date:"M d, Y" }}</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card-glass p-3 text-center" style="background: rgba(15, 23, 42, 0.3);">
+                        <i class="far fa-user text-primary-accent mb-2 fs-4"></i>
+                        <div class="text-secondary small fw-bold mb-1">Originator</div>
+                        <div class="text-white small fw-bold">{{ complaint.created_by.username }}</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card-glass p-3 text-center" style="background: rgba(15, 23, 42, 0.3);">
+                        <i class="fas fa-user-tie text-primary-accent mb-2 fs-4"></i>
+                        <div class="text-secondary small fw-bold mb-1">Case Manager</div>
+                        <div class="text-white small fw-bold">{{ complaint.assigned_to.username|default:"Awaiting..." }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if user.role in 'ADMIN,MANAGER' and user == complaint.assigned_to or user.role == 'ADMIN' %}
+        <!-- Management Protocol -->
+        <div class="card-glass p-5 stagger-2 fade-in-up" style="border-radius: 24px;">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="p-3 bg-primary-accent bg-opacity-10 text-primary-accent rounded-circle" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-terminal"></i>
+                </div>
+                <div>
+                    <h5 class="mb-0 text-white fw-800">Operational Update</h5>
+                    <p class="text-secondary small mb-0">Append status protocols and field remarks</p>
+                </div>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="row g-4">
+                    {% if user.role == 'ADMIN' %}
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label small text-secondary fw-bold text-uppercase">Direct Assignment</label>
+                        <select name="assigned_to" class="form-select form-control-premium" style="height: 55px;">
+                            <option value="">-- Select Personnel --</option>
+                            {% for manager in managers %}
+                            <option value="{{ manager.id }}" {% if complaint.assigned_to == manager %}selected{% endif %}>
+                                {{ manager.username }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+
+                    <div class="{% if user.role == 'ADMIN' %}col-md-6{% else %}col-12{% endif %} mb-3">
+                        <label class="form-label small text-secondary fw-bold text-uppercase">Status Protocol</label>
+                        <select name="status" class="form-select form-control-premium" style="height: 55px;">
+                            <option value="OPEN" {% if complaint.status == 'OPEN' %}selected{% endif %}>Open</option>
+                            <option value="IN_PROGRESS" {% if complaint.status == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
+                            <option value="RESOLVED" {% if complaint.status == 'RESOLVED' %}selected{% endif %}>Resolved</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label small text-secondary fw-bold text-uppercase">Field Remarks</label>
+                    <textarea name="remark" class="form-control form-control-premium" rows="4" placeholder="Enter findings or resolution steps..." required></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-premium px-5 py-3">
+                    Sync Updates <i class="fas fa-sync-alt ms-2 small"></i>
+                </button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Right Col: Cinematic Timeline -->
+    <div class="col-lg-4">
+        <div class="card-glass p-4 h-100 stagger-3 fade-in-up" style="border-radius: 24px;">
+            <h5 class="mb-5 text-white fw-800 d-flex align-items-center gap-2">
+                <i class="fas fa-stream text-primary-accent"></i> Activity Stream
+            </h5>
+            
+            <div class="timeline">
+                <!-- Origin Node -->
+                <div class="timeline-item">
+                    <div class="timeline-dot" style="border-color: var(--primary-accent);"></div>
+                    <div class="timeline-content card-glass p-3 mb-0" style="background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.05);">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="fw-bold text-white small">Baseline Logging</span>
+                            <span class="text-secondary x-small">{{ complaint.created_at|date:"M d" }}</span>
+                        </div>
+                        <p class="text-secondary x-small mb-0">System initialized via User Portal.</p>
+                    </div>
+                </div>
+
+                {% for remark in complaint.remarks.all %}
+                <div class="timeline-item">
+                    <div class="timeline-dot {% if remark.status_at_remark == 'RESOLVED' %}bg-success{% endif %}" style="border-color: {% if remark.status_at_remark == 'RESOLVED' %}var(--success){% else %}var(--secondary-accent){% endif %};"></div>
+                    <div class="timeline-content card-glass p-3 mb-0" style="background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.05);">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="fw-bold text-white small">{{ remark.added_by.username }}</span>
+                            <span class="text-secondary x-small">{{ remark.timestamp|date:"M d, H:i" }}</span>
+                        </div>
+                        <p class="text-white small mb-2 lh-sm">{{ remark.remark }}</p>
+                        {% if remark.status_at_remark %}
+                        <div class="d-inline-block x-small px-2 py-1 rounded bg-{{ remark.status_at_remark|lower }} border-0 fw-bold">
+                            {{ remark.status_at_remark }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .x-small { font-size: 0.7rem; }
+</style>
+{% endblock %}

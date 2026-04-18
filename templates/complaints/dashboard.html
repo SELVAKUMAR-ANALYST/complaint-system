@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - CMS Pro{% endblock %}
+{% block page_title %}Overview Dashboard{% endblock %}
+
+{% block content %}
+<!-- Stat Cards -->
+<div class="row g-4 mb-5 stagger-1 fade-in-up">
+    <div class="col-md-3">
+        <div class="card-glass stat-card h-100">
+            <h6 class="text-secondary small text-uppercase fw-bold mb-3">Total Complaints</h6>
+            <div class="stat-value text-white mb-2">{{ stats.total }}</div>
+            <div class="d-flex align-items-center text-secondary small">
+                <i class="fas fa-chart-line me-2 text-primary-accent"></i> 
+                <span>All recorded items</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-glass stat-card open h-100">
+            <h6 class="text-secondary small text-uppercase fw-bold mb-3">Awaiting Action</h6>
+            <div class="stat-value text-white mb-2">{{ stats.open }}</div>
+            <div class="d-flex align-items-center text-warning small">
+                <i class="fas fa-clock me-2"></i> 
+                <span>Check priority status</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-glass stat-card progress h-100">
+            <h6 class="text-secondary small text-uppercase fw-bold mb-3">In Progress</h6>
+            <div class="stat-value text-white mb-2">{{ stats.progress }}</div>
+            <div class="d-flex align-items-center text-info small">
+                <i class="fas fa-sync-alt fa-spin-hover me-2"></i> 
+                <span>Active resolution</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-glass stat-card resolved h-100">
+            <h6 class="text-secondary small text-uppercase fw-bold mb-3">Successfully Resolved</h6>
+            <div class="stat-value text-white mb-2">{{ stats.resolved }}</div>
+            <div class="d-flex align-items-center text-success small">
+                <i class="fas fa-check-double me-2"></i> 
+                <span>Verified solutions</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if request.user.role == 'ADMIN' and chart_data %}
+<div class="row g-4 mb-5 stagger-2 fade-in-up">
+    <div class="col-lg-8">
+        <div class="card-glass h-100">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="mb-0 text-white">Departmental Distribution</h5>
+                <i class="fas fa-ellipsis-h text-secondary"></i>
+            </div>
+            <canvas id="categoryChart" height="280"></canvas>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card-glass h-100">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="mb-0 text-white">Status Breakdown</h5>
+                <i class="fas fa-chart-pie text-secondary"></i>
+            </div>
+            <canvas id="statusChart" height="280"></canvas>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row g-4 stagger-3 fade-in-up">
+    <!-- Recent Complaints Table -->
+    <div class="col-lg-12">
+        <div class="card-glass h-100 border-0 shadow-lg" style="background: rgba(30, 41, 59, 0.4);">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h5 class="mb-1 text-white">Activity Log</h5>
+                    <p class="text-secondary small mb-0">Reviewing latest complaint entries</p>
+                </div>
+                <a href="{% url 'complaint_list' %}" class="btn btn-outline-secondary btn-sm px-4 rounded-pill border-secondary">
+                    Browse All <i class="fas fa-arrow-right ms-2 small"></i>
+                </a>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Issue Title</th>
+                            <th>Category</th>
+                            <th>Timeline</th>
+                            <th>Current State</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for complaint in recent_complaints %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold text-white">{{ complaint.title }}</div>
+                                <div class="x-small text-secondary">REF-{{ complaint.id|stringformat:"05d" }}</div>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary-bg border border-secondary text-secondary px-2 py-1 rounded small">
+                                    {{ complaint.get_category_display }}
+                                </span>
+                            </td>
+                            <td class="text-secondary small">
+                                <i class="far fa-clock me-1"></i> {{ complaint.created_at|date:"M d, Y" }}
+                            </td>
+                            <td>
+                                <span class="badge-pill bg-{{ complaint.status|lower }}">
+                                    {{ complaint.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'complaint_detail' complaint.pk %}" class="btn btn-glass-sm rounded-circle" style="width: 35px; height: 35px; display: inline-flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-chevron-right small text-primary-accent"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-secondary">
+                                <i class="fas fa-inbox d-block mb-3 fs-3 opacity-50"></i>
+                                No recent activity found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn-glass-sm {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.3s;
+    }
+    .btn-glass-sm:hover {
+        background: rgba(99, 102, 241, 0.1);
+        border-color: rgba(99, 102, 241, 0.3);
+        transform: scale(1.1);
+    }
+    .fa-spin-hover:hover {
+        animation: fa-spin 2s infinite linear;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+{% if request.user.role == 'ADMIN' and chart_data %}
+<script>
+    // Data from Django
+    const categoryData = {{ chart_data.categories|safe }};
+    const statusData = {{ chart_data.statuses|safe }};
+    
+    Chart.defaults.color = '#94a3b8';
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    
+    // Category Chart (Bar)
+    const ctxCategory = document.getElementById('categoryChart').getContext('2d');
+    const categoryGradient = ctxCategory.createLinearGradient(0, 0, 0, 400);
+    categoryGradient.addColorStop(0, '#6366f1');
+    categoryGradient.addColorStop(1, 'rgba(99, 102, 241, 0.1)');
+
+    new Chart(ctxCategory, {
+        type: 'bar',
+        data: {
+            labels: categoryData.map(d => d.category),
+            datasets: [{
+                label: 'Complaints',
+                data: categoryData.map(d => d.count),
+                backgroundColor: categoryGradient,
+                hoverBackgroundColor: '#6366f1',
+                borderRadius: 10,
+                barThickness: 30
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { 
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1e293b',
+                    titleColor: '#fff',
+                    bodyColor: '#94a3b8',
+                    borderColor: 'rgba(255,255,255,0.1)',
+                    borderWidth: 1,
+                    padding: 12,
+                    displayColors: false
+                }
+            },
+            scales: {
+                y: { grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false }, ticks: { padding: 10 } },
+                x: { grid: { display: false }, ticks: { padding: 10 } }
+            }
+        }
+    });
+
+    // Status Chart (Doughnut)
+    const ctxStatus = document.getElementById('statusChart').getContext('2d');
+    new Chart(ctxStatus, {
+        type: 'doughnut',
+        data: {
+            labels: statusData.map(d => d.status),
+            datasets: [{
+                data: statusData.map(d => d.count),
+                backgroundColor: ['#f59e0b', '#22d3ee', '#10b981', '#ef4444'],
+                borderWidth: 5,
+                borderColor: '#1e293b',
+                hoverOffset: 15
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '75%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { 
+                        color: '#94a3b8', 
+                        padding: 20, 
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        font: { size: 12, weight: '600' }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: '#1e293b',
+                    padding: 12,
+                    borderWidth: 1,
+                    borderColor: 'rgba(255,255,255,0.1)'
+                }
+            }
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}

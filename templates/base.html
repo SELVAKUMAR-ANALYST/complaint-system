@@ -1,0 +1,159 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ComplaintMS{% endblock %}</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <a href="{% url 'dashboard' %}" class="sidebar-brand">
+            <div class="brand-logo" style="width: 40px; height: 40px; background: url('{% static 'img/logo.png' %}') center/contain no-repeat; border-radius: 12px; box-shadow: 0 0 20px var(--primary-glow);">
+            </div>
+            <span>CMS<span style="color: var(--primary-accent)">PRO</span></span>
+        </a>
+
+        <ul class="sidebar-nav">
+            <li class="nav-item">
+                <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'complaint_list' %}" class="nav-link {% if request.resolver_match.url_name == 'complaint_list' or request.resolver_match.url_name == 'complaint_detail' %}active{% endif %}">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>Complaints</span>
+                </a>
+            </li>
+            {% if user.role == 'USER' %}
+            <li class="nav-item">
+                <a href="{% url 'complaint_create' %}" class="nav-link {% if request.resolver_match.url_name == 'complaint_create' %}active{% endif %}">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>New Complaint</span>
+                </a>
+            </li>
+            {% endif %}
+            
+            <div class="mt-4 mb-2 small text-uppercase text-secondary fw-bold" style="font-size: 0.65rem; letter-spacing: 0.1em; padding-left: 18px;">Account</div>
+            
+            <li class="nav-item">
+                <a href="#" class="nav-link">
+                    <i class="fas fa-user-circle"></i>
+                    <span>My Profile</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'user_logout' %}" class="nav-link text-danger">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </li>
+        </ul>
+
+        {% if user.is_authenticated %}
+        <div class="sidebar-user">
+            {% if user.avatar %}
+                <img src="{{ user.avatar.url }}" alt="Avatar" class="user-avatar">
+            {% else %}
+                <img src="{% static 'img/default_avatar.png' %}" alt="Avatar" class="user-avatar">
+            {% endif %}
+            <div class="user-info">
+                <h6 class="mb-0 text-white small">{{ user.username }}</h6>
+                <span class="user-role">{{ user.get_role_display }}</span>
+            </div>
+        </div>
+        {% endif %}
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <!-- Top Navbar -->
+        <header class="top-navbar fade-in-up">
+            <div class="d-flex align-items-center gap-3">
+                <i class="fas fa-bars mobile-toggle d-lg-none" id="sidebarToggle" style="cursor: pointer; font-size: 1.5rem;"></i>
+                <h2 class="page-title mb-0">{% block page_title %}Dashboard{% endblock %}</h2>
+            </div>
+            
+            <div class="top-nav-actions d-flex align-items-center gap-3">
+                <div class="notification-bell card-glass p-2 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px; border-radius: 12px; position: relative; cursor: pointer;">
+                    <i class="far fa-bell"></i>
+                    <span class="notification-badge" style="position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%;"></span>
+                </div>
+                
+                <div class="dropdown">
+                    <button class="card-glass px-3 py-2 d-flex align-items-center gap-3 cursor-pointer border-0 bg-transparent text-white" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <div class="text-end d-none d-md-block">
+                            <div class="small fw-bold mb-0" style="line-height: 1.2;">{{ user.username }}</div>
+                            <span class="x-small text-secondary fw-bold" style="font-size: 0.65rem;">{{ user.get_role_display }}</span>
+                        </div>
+                        <i class="fas fa-chevron-down small text-secondary"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark border-secondary shadow-lg">
+                        <li><a class="dropdown-item py-2" href="#"><i class="fas fa-user-circle me-2"></i> Profile</a></li>
+                        <li><hr class="dropdown-divider border-secondary"></li>
+                        <li>
+                            <a class="dropdown-item py-2 text-danger" href="{% url 'user_logout' %}">
+                                <i class="fas fa-sign-out-alt me-2"></i> Logout
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dynamic Content -->
+        <div class="content-wrapper">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Sidebar Toggle for Mobile
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+            });
+        }
+        
+        // Add active classes to sidebar links
+        document.querySelectorAll('.nav-link').forEach(link => {
+            if (link.href === window.location.href) {
+                link.classList.add('active');
+            }
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

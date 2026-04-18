@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Complaints - CMS Pro{% endblock %}
+
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center w-100">
+    <span>My Complaints</span>
+    <a href="{% url 'complaint_create' %}" class="btn btn-premium btn-sm px-4">
+        <i class="fas fa-plus me-2"></i> Raise Complaint
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Filter Bar -->
+<div class="mb-4">
+    <div class="d-flex gap-2">
+        <a href="?status=ALL" class="btn btn-sm {% if current_status == 'ALL' %}btn-premium{% else %}card-glass text-secondary{% endif %} px-4">All</a>
+        <a href="?status=OPEN" class="btn btn-sm {% if current_status == 'OPEN' %}btn-premium{% else %}card-glass text-secondary{% endif %} px-4">Open</a>
+        <a href="?status=IN_PROGRESS" class="btn btn-sm {% if current_status == 'IN_PROGRESS' %}btn-premium{% else %}card-glass text-secondary{% endif %} px-4">In Progress</a>
+        <a href="?status=RESOLVED" class="btn btn-sm {% if current_status == 'RESOLVED' %}btn-premium{% else %}card-glass text-secondary{% endif %} px-4">Resolved</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% for complaint in complaints %}
+    <div class="col-md-6 col-xl-4">
+        <div class="card-glass h-100 d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <span class="badge bg-secondary-bg border border-secondary text-secondary small px-3 py-2 rounded-pill">
+                    {{ complaint.get_category_display }}
+                </span>
+                <span class="badge-pill bg-{{ complaint.status|lower }} small">
+                    {{ complaint.get_status_display }}
+                </span>
+            </div>
+            
+            <h5 class="mb-2 text-white">{{ complaint.title }}</h5>
+            <p class="text-secondary small mb-4 flex-grow-1">
+                {{ complaint.description|truncatechars:120 }}
+            </p>
+            
+            <div class="mt-auto">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="small text-secondary">
+                        <i class="far fa-calendar-alt me-1"></i> {{ complaint.created_at|date:"M d, Y" }}
+                    </div>
+                    <div class="small text-secondary">
+                        {% if user.role != 'USER' %}
+                            <i class="far fa-user me-1"></i> By: {{ complaint.created_by.username }}
+                        {% else %}
+                            <i class="far fa-user me-1"></i> 
+                            {% if complaint.assigned_to %}
+                                {{ complaint.assigned_to.username }}
+                            {% else %}
+                                <span class="fst-italic">Not Assigned</span>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <a href="{% url 'complaint_detail' complaint.pk %}" class="btn btn-outline-secondary w-100 rounded-pill border-secondary hover-indigo">
+                    View Details
+                </a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5">
+        <div class="mb-3 text-secondary" style="font-size: 3rem;">
+            <i class="fas fa-folder-open"></i>
+        </div>
+        <h5 class="text-secondary">No complaints found.</h5>
+        <p class="text-muted small">Try changing the filter or raise a new complaint.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+    .hover-indigo:hover {
+        background-color: var(--primary-accent) !important;
+        border-color: var(--primary-accent) !important;
+        color: white !important;
+    }
+</style>
+{% endblock %}
