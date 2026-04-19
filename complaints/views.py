@@ -223,7 +223,8 @@ def complaint_detail(request, pk):
 @login_required
 def user_logout(request):
     auth_logout(request)
-    return redirect('login')
+    return redirect('homepage')
+
 
 from django.contrib import messages
 
