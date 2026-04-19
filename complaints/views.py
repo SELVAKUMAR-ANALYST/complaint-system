@@ -2,8 +2,31 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
-from .models import User, Complaint, ComplaintRemark
-from .forms import ComplaintForm
+from django.db.models import Count, Avg
+from django.http import HttpResponse
+from django.utils import timezone
+import csv
+from .models import User, Complaint, ComplaintRemark, ComplaintRating
+from .forms import ComplaintForm, RatingForm
+
+
+def homepage(request):
+    """Public landing page - redirects logged-in users to dashboard"""
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    
+    # Live stats for the homepage
+    stats = {
+        'total_resolved': Complaint.objects.filter(status='RESOLVED').count(),
+        'total_users': User.objects.filter(role='USER').count(),
+        'avg_rating': ComplaintRating.objects.aggregate(avg=Avg('stars'))['avg'],
+        'total_complaints': Complaint.objects.count(),
+    }
+    if stats['avg_rating']:
+        stats['avg_rating'] = round(stats['avg_rating'], 1)
+    
+    return render(request, 'homepage.html', {'stats': stats})
+
 
 @login_required
 def dashboard(request):
@@ -13,30 +36,36 @@ def dashboard(request):
         complaints = Complaint.objects.filter(assigned_to=request.user)
     else:
         complaints = Complaint.objects.filter(created_by=request.user)
+
+    overdue_count = sum(1 for c in complaints if c.is_overdue)
         
     stats = {
         'total': complaints.count(),
         'open': complaints.filter(status='OPEN').count(),
         'progress': complaints.filter(status='IN_PROGRESS').count(),
         'resolved': complaints.filter(status='RESOLVED').count(),
+        'overdue': overdue_count,
     }
     recent_complaints = complaints.order_by('-created_at')[:5]
     
     chart_data = None
     if request.user.role == 'ADMIN':
-        from django.db.models import Count
         category_counts = Complaint.objects.values('category').annotate(count=Count('id'))
         status_counts = Complaint.objects.values('status').annotate(count=Count('id'))
+        avg_rating = ComplaintRating.objects.aggregate(avg=Avg('stars'))['avg']
         
         chart_data = {
             'categories': list(category_counts),
             'statuses': list(status_counts),
+            'avg_rating': round(avg_rating, 1) if avg_rating else None,
+            'total_ratings': ComplaintRating.objects.count(),
         }
     
     return render(request, 'complaints/dashboard.html', {
         'stats': stats, 
         'recent_complaints': recent_complaints,
-        'chart_data': chart_data
+        'chart_data': chart_data,
+        'overdue_count': overdue_count,
     })
 
 @login_required
@@ -52,16 +81,19 @@ def complaint_list(request):
     
     if status_filter != 'ALL':
         complaints = complaints.filter(status=status_filter)
+
+    overdue_count = sum(1 for c in complaints if c.is_overdue)
         
     return render(request, 'complaints/complaint_list.html', {
         'complaints': complaints,
-        'current_status': status_filter
+        'current_status': status_filter,
+        'overdue_count': overdue_count,
     })
 
 @login_required
 def complaint_create(request):
     if request.method == 'POST':
-        form = ComplaintForm(request.POST)
+        form = ComplaintForm(request.POST, request.FILES)
         if form.is_valid():
             complaint = form.save(commit=False)
             complaint.created_by = request.user
@@ -74,27 +106,59 @@ def complaint_create(request):
 @login_required
 def complaint_detail(request, pk):
     complaint = get_object_or_404(Complaint, pk=pk)
-    # Ensure user can only see their own complaint or if it's assigned to them (for managers) or if they are admin
     if not (complaint.created_by == request.user or complaint.assigned_to == request.user or request.user.role == 'ADMIN'):
         return redirect('dashboard')
         
     managers = User.objects.filter(role='MANAGER') if request.user.role == 'ADMIN' else None
+    rating_form = None
+    existing_rating = None
+
+    try:
+        existing_rating = complaint.rating
+    except ComplaintRating.DoesNotExist:
+        pass
+
+    # Show rating form only if complaint is resolved and rated by the complaint creator
+    if complaint.status == 'RESOLVED' and complaint.created_by == request.user and not existing_rating:
+        rating_form = RatingForm()
         
     if request.method == 'POST':
+        action = request.POST.get('action', 'update')
+
+        # Handle re-open action
+        if action == 'reopen' and complaint.status == 'RESOLVED' and complaint.created_by == request.user:
+            complaint.status = 'OPEN'
+            complaint.reopen_count += 1
+            complaint.save()
+            ComplaintRemark.objects.create(
+                complaint=complaint,
+                remark=f'Complaint re-opened by {request.user.username} (Reopen #{complaint.reopen_count}). Issue not resolved satisfactorily.',
+                added_by=request.user,
+                status_at_remark='OPEN'
+            )
+            return redirect('complaint_detail', pk=pk)
+
+        # Handle star rating submission
+        elif action == 'rate' and complaint.status == 'RESOLVED' and complaint.created_by == request.user and not existing_rating:
+            rating_form = RatingForm(request.POST)
+            if rating_form.is_valid():
+                rating = rating_form.save(commit=False)
+                rating.complaint = complaint
+                rating.rated_by = request.user
+                rating.save()
+                return redirect('complaint_detail', pk=pk)
+
         # Handle status/remark update (for managers/admins)
-        if request.user.role in ['ADMIN', 'MANAGER']:
+        elif request.user.role in ['ADMIN', 'MANAGER']:
             remark_text = request.POST.get('remark')
             new_status = request.POST.get('status')
             
-            # Handle assignment (for admins)
             if request.user.role == 'ADMIN':
                 assigned_to_id = request.POST.get('assigned_to')
                 if assigned_to_id:
                     manager = get_object_or_404(User, id=assigned_to_id)
                     complaint.assigned_to = manager
                     complaint.save()
-                    
-                    # Notify Manager
                     send_mail(
                         f'New Complaint Assigned: {complaint.title}',
                         f'Hello {manager.username}, a new complaint has been assigned to you.\n\nTitle: {complaint.title}\nCategory: {complaint.get_category_display()}\n\nCheck details here: {request.build_absolute_uri()}',
@@ -113,8 +177,6 @@ def complaint_detail(request, pk):
                 if new_status:
                     complaint.status = new_status
                     complaint.save()
-                    
-                    # Notify User
                     send_mail(
                         f'Update on your complaint: {complaint.title}',
                         f'Hello {complaint.created_by.username},\nYour complaint "{complaint.title}" has been updated to {complaint.get_status_display()}.\n\nRemark: {remark_text}\n\nTrack progress: {request.build_absolute_uri()}',
@@ -126,7 +188,9 @@ def complaint_detail(request, pk):
 
     return render(request, 'complaints/complaint_detail.html', {
         'complaint': complaint,
-        'managers': managers
+        'managers': managers,
+        'rating_form': rating_form,
+        'existing_rating': existing_rating,
     })
 
 @login_required
@@ -151,3 +215,36 @@ def register(request):
         login(request, user)
         return redirect('dashboard')
     return render(request, 'registration/register.html')
+
+@login_required
+def export_complaints_csv(request):
+    """Admin-only: Export all complaints to CSV"""
+    if request.user.role != 'ADMIN':
+        return redirect('dashboard')
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="complaints_{timezone.now().strftime("%Y%m%d_%H%M")}.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Ref ID', 'Title', 'Category', 'Status', 'Raised By', 'Assigned To', 'Created At', 'Days Open', 'Overdue', 'Reopen Count', 'Rating'])
+
+    complaints = Complaint.objects.select_related('created_by', 'assigned_to').prefetch_related('rating').all().order_by('-created_at')
+    for c in complaints:
+        try:
+            rating = c.rating.stars
+        except Exception:
+            rating = 'N/A'
+        writer.writerow([
+            f'REF-{c.id:05d}',
+            c.title,
+            c.get_category_display(),
+            c.get_status_display(),
+            c.created_by.username,
+            c.assigned_to.username if c.assigned_to else 'Unassigned',
+            c.created_at.strftime('%Y-%m-%d %H:%M'),
+            c.days_open,
+            'Yes' if c.is_overdue else 'No',
+            c.reopen_count,
+            rating,
+        ])
+    return response

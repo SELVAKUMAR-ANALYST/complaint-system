@@ -7,7 +7,7 @@
 {% block content %}
 <!-- Stat Cards -->
 <div class="row g-4 mb-5 stagger-1 fade-in-up">
-    <div class="col-md-3">
+    <div class="col-6 col-lg">
         <div class="card-glass stat-card h-100">
             <h6 class="text-secondary small text-uppercase fw-bold mb-3">Total Complaints</h6>
             <div class="stat-value text-white mb-2">{{ stats.total }}</div>
@@ -17,7 +17,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-6 col-lg">
         <div class="card-glass stat-card open h-100">
             <h6 class="text-secondary small text-uppercase fw-bold mb-3">Awaiting Action</h6>
             <div class="stat-value text-white mb-2">{{ stats.open }}</div>
@@ -27,7 +27,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-6 col-lg">
         <div class="card-glass stat-card progress h-100">
             <h6 class="text-secondary small text-uppercase fw-bold mb-3">In Progress</h6>
             <div class="stat-value text-white mb-2">{{ stats.progress }}</div>
@@ -37,9 +37,9 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-6 col-lg">
         <div class="card-glass stat-card resolved h-100">
-            <h6 class="text-secondary small text-uppercase fw-bold mb-3">Successfully Resolved</h6>
+            <h6 class="text-secondary small text-uppercase fw-bold mb-3">Resolved</h6>
             <div class="stat-value text-white mb-2">{{ stats.resolved }}</div>
             <div class="d-flex align-items-center text-success small">
                 <i class="fas fa-check-double me-2"></i> 
@@ -47,30 +47,76 @@
             </div>
         </div>
     </div>
+    <div class="col-6 col-lg">
+        <div class="card-glass stat-card h-100" style="border-color: rgba(239,68,68,0.4); {% if stats.overdue %}box-shadow: 0 0 25px rgba(239,68,68,0.1);{% endif %}">
+            <h6 class="text-secondary small text-uppercase fw-bold mb-3">SLA Overdue</h6>
+            <div class="stat-value mb-2" style="color: {% if stats.overdue %}#ef4444{% else %}white{% endif %};">{{ stats.overdue }}</div>
+            <div class="d-flex align-items-center small" style="color: {% if stats.overdue %}#ef4444{% else %}#94a3b8{% endif %};">
+                <i class="fas fa-exclamation-triangle me-2"></i> 
+                <span>{% if stats.overdue %}Needs attention!{% else %}All within SLA{% endif %}</span>
+            </div>
+        </div>
+    </div>
 </div>
 
 {% if request.user.role == 'ADMIN' and chart_data %}
-<div class="row g-4 mb-5 stagger-2 fade-in-up">
-    <div class="col-lg-8">
-        <div class="card-glass h-100">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h5 class="mb-0 text-white">Departmental Distribution</h5>
-                <i class="fas fa-ellipsis-h text-secondary"></i>
+
+<!-- Admin Extra Stats Row: Avg Rating -->
+<div class="row g-4 mb-4 stagger-2 fade-in-up">
+    <div class="col-md-6">
+        <div class="card-glass stat-card h-100" style="border-color: rgba(251,191,36,0.3);">
+            <h6 class="text-secondary small text-uppercase fw-bold mb-3">Avg. Satisfaction</h6>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <div class="stat-value text-warning mb-0">
+                    {% if chart_data.avg_rating %}{{ chart_data.avg_rating }}{% else %}—{% endif %}
+                </div>
+                <div class="d-flex gap-1 ms-1">
+                    {% for i in "12345" %}
+                    <i class="fas fa-star small {% if chart_data.avg_rating and forloop.counter <= chart_data.avg_rating %}text-warning{% else %}text-secondary{% endif %}"></i>
+                    {% endfor %}
+                </div>
             </div>
-            <canvas id="categoryChart" height="280"></canvas>
+            <div class="text-secondary small"><i class="fas fa-comments me-2 text-warning"></i>{{ chart_data.total_ratings }} total review{{ chart_data.total_ratings|pluralize }}</div>
         </div>
     </div>
-    <div class="col-lg-4">
-        <div class="card-glass h-100">
+    <div class="col-md-6">
+        <div class="card-glass stat-card h-100" style="border-color: rgba(99,102,241,0.3);">
+            <h6 class="text-secondary small text-uppercase fw-bold mb-3">Resolution Rate</h6>
+            <div class="stat-value text-white mb-2">
+                {% if stats.total %}{{ stats.resolved|floatformat:0 }}/{{ stats.total }}{% else %}—{% endif %}
+            </div>
+            <div class="d-flex align-items-center text-success small"><i class="fas fa-check-double me-2"></i>Complaints fully resolved</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-4 mb-5 stagger-3 fade-in-up">
+    <div class="col-lg-7">
+        <div class="card-glass h-100" style="padding: 24px;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="mb-0 text-white">Departmental Distribution</h5>
+                <span class="badge bg-primary-accent bg-opacity-10 text-primary-accent border border-primary-accent border-opacity-25 small px-2">Bar Chart</span>
+            </div>
+            <div style="position: relative; height: 240px;">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card-glass h-100" style="padding: 24px;">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h5 class="mb-0 text-white">Status Breakdown</h5>
                 <i class="fas fa-chart-pie text-secondary"></i>
             </div>
-            <canvas id="statusChart" height="280"></canvas>
+            <div style="position: relative; height: 240px;">
+                <canvas id="statusChart"></canvas>
+            </div>
         </div>
     </div>
 </div>
 {% endif %}
+
 
 <div class="row g-4 stagger-3 fade-in-up">
     <!-- Recent Complaints Table -->
@@ -113,9 +159,16 @@
                                 <i class="far fa-clock me-1"></i> {{ complaint.created_at|date:"M d, Y" }}
                             </td>
                             <td>
-                                <span class="badge-pill bg-{{ complaint.status|lower }}">
-                                    {{ complaint.get_status_display }}
-                                </span>
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if complaint.is_overdue %}
+                                    <span class="badge rounded-pill small fw-bold px-2 py-1" style="background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); font-size: 0.6rem;">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    </span>
+                                    {% endif %}
+                                    <span class="badge-pill bg-{{ complaint.status|lower }}">
+                                        {{ complaint.get_status_display }}
+                                    </span>
+                                </div>
                             </td>
                             <td class="text-end">
                                 <a href="{% url 'complaint_detail' complaint.pk %}" class="btn btn-glass-sm rounded-circle" style="width: 35px; height: 35px; display: inline-flex; align-items: center; justify-content: center;">

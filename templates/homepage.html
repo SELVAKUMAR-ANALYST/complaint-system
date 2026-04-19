@@ -1,0 +1,338 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMS PRO — Enterprise Complaint Management</title>
+    <meta name="description" content="Next-gen enterprise complaint management system. Track, resolve, and analyze complaints with a premium experience.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{--primary:#6366f1;--glow:rgba(99,102,241,0.5);--cyan:#22d3ee;--bg:#030712;--card:rgba(15,23,42,0.6)}
+        body{font-family:'Inter',sans-serif;background:var(--bg);color:#f1f5f9;overflow-x:hidden}
+        h1,h2,h3,h4,h5,h6{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;letter-spacing:-0.03em}
+
+        /* Navbar */
+        .hp-nav{position:fixed;top:0;width:100%;z-index:100;padding:1.2rem 0;transition:all 0.4s;backdrop-filter:blur(0px)}
+        .hp-nav.scrolled{background:rgba(3,7,18,0.85);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.05);padding:0.8rem 0}
+        .nav-brand{font-family:'Plus Jakarta Sans',sans-serif;font-size:1.5rem;font-weight:900;color:#fff;text-decoration:none}
+        .nav-brand span{color:var(--primary)}
+        .nav-links a{color:#94a3b8;text-decoration:none;font-size:0.85rem;font-weight:600;transition:color 0.3s;margin-left:2rem}
+        .nav-links a:hover{color:#fff}
+        .btn-nav{background:var(--primary);color:#fff!important;padding:10px 24px;border-radius:10px;font-weight:700;transition:all 0.3s;box-shadow:0 4px 15px rgba(99,102,241,0.3)}
+        .btn-nav:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(99,102,241,0.5)}
+
+        /* Hero */
+        .hero{min-height:100vh;display:flex;align-items:center;position:relative;overflow:hidden;padding-top:80px}
+        .hero-bg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+        .hero-orb{position:absolute;border-radius:50%;filter:blur(120px);opacity:0.15;animation:orbFloat 20s infinite alternate}
+        .hero-orb.o1{width:600px;height:600px;background:var(--primary);top:-200px;right:-100px}
+        .hero-orb.o2{width:400px;height:400px;background:var(--cyan);bottom:-100px;left:-100px;animation-delay:5s}
+        .hero-orb.o3{width:300px;height:300px;background:#a855f7;top:40%;left:50%;animation-delay:10s}
+        @keyframes orbFloat{0%{transform:translate(0,0) scale(1)}50%{transform:translate(40px,-30px) scale(1.1)}100%{transform:translate(-20px,20px) scale(0.95)}}
+        .hero-content{position:relative;z-index:2}
+        .hero-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:50px;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.25);color:var(--primary);font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:2rem;animation:fadeUp 1s 0.2s both}
+        .hero-badge .dot{width:6px;height:6px;background:#10b981;border-radius:50%;box-shadow:0 0 8px #10b981;animation:pulse 2s infinite}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+        .hero h1{font-size:clamp(2.8rem,6vw,5.5rem);line-height:0.95;letter-spacing:-3px;margin-bottom:1.5rem;animation:fadeUp 1s 0.4s both}
+        .hero h1 .gradient{background:linear-gradient(135deg,var(--primary),var(--cyan),#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:200% 200%;animation:gradientShift 5s ease infinite}
+        @keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+        .hero-sub{font-size:1.15rem;color:#94a3b8;max-width:500px;line-height:1.7;margin-bottom:2.5rem;animation:fadeUp 1s 0.6s both}
+        .hero-actions{display:flex;gap:1rem;flex-wrap:wrap;animation:fadeUp 1s 0.8s both}
+        .btn-hero{padding:16px 36px;border-radius:14px;font-weight:700;font-size:1rem;transition:all 0.3s;display:inline-flex;align-items:center;gap:10px;text-decoration:none}
+        .btn-hero.primary{background:linear-gradient(135deg,var(--primary),#4f46e5);color:#fff;box-shadow:0 4px 20px rgba(99,102,241,0.4)}
+        .btn-hero.primary:hover{transform:translateY(-3px);box-shadow:0 12px 35px rgba(99,102,241,0.5)}
+        .btn-hero.outline{background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.15)}
+        .btn-hero.outline:hover{border-color:var(--primary);background:rgba(99,102,241,0.05)}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+
+        /* Hero Visual */
+        .hero-visual{position:relative;z-index:2;animation:fadeUp 1s 1s both}
+        .hero-card{background:var(--card);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:2rem;position:relative;overflow:hidden}
+        .hero-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--primary),var(--cyan),#a855f7)}
+        .mock-row{display:flex;align-items:center;gap:1rem;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+        .mock-row:last-child{border:none}
+        .mock-dot{width:10px;height:10px;border-radius:50%}
+        .mock-bar{height:8px;border-radius:4px;flex:1}
+        .mock-badge{padding:4px 12px;border-radius:6px;font-size:0.65rem;font-weight:700;text-transform:uppercase}
+
+        /* Stats */
+        .stats-section{padding:6rem 0;position:relative}
+        .stat-box{text-align:center;padding:2.5rem 1.5rem;background:var(--card);border:1px solid rgba(255,255,255,0.06);border-radius:20px;transition:all 0.4s}
+        .stat-box:hover{transform:translateY(-8px);border-color:rgba(99,102,241,0.3);box-shadow:0 20px 40px rgba(0,0,0,0.3)}
+        .stat-num{font-size:3rem;font-weight:900;letter-spacing:-2px;background:linear-gradient(135deg,#fff,#94a3b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .stat-label{color:#64748b;font-size:0.8rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;margin-top:0.5rem}
+
+        /* Features */
+        .features{padding:6rem 0}
+        .section-label{display:inline-block;padding:6px 16px;border-radius:50px;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);color:var(--primary);font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:1rem}
+        .section-title{font-size:clamp(2rem,4vw,3rem);letter-spacing:-2px;margin-bottom:1rem}
+        .section-sub{color:#64748b;font-size:1.05rem;max-width:550px}
+        .feat-card{background:var(--card);border:1px solid rgba(255,255,255,0.06);border-radius:20px;padding:2.5rem;height:100%;transition:all 0.4s;position:relative;overflow:hidden}
+        .feat-card:hover{transform:translateY(-8px);border-color:rgba(99,102,241,0.3);box-shadow:0 25px 50px rgba(0,0,0,0.3)}
+        .feat-card::after{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,rgba(99,102,241,0.03),transparent);pointer-events:none}
+        .feat-icon{width:60px;height:60px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:1.5rem}
+        .feat-card h5{color:#fff;font-size:1.15rem;margin-bottom:0.75rem}
+        .feat-card p{color:#64748b;font-size:0.9rem;line-height:1.7;margin:0}
+
+        /* CTA */
+        .cta{padding:8rem 0;text-align:center;position:relative}
+        .cta-box{background:linear-gradient(135deg,rgba(99,102,241,0.1),rgba(34,211,238,0.05));border:1px solid rgba(99,102,241,0.2);border-radius:32px;padding:5rem 3rem;position:relative;overflow:hidden}
+        .cta-box::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(99,102,241,0.08),transparent 60%);animation:orbFloat 15s infinite alternate}
+
+        /* Footer */
+        .hp-footer{padding:3rem 0;border-top:1px solid rgba(255,255,255,0.05);text-align:center;color:#475569;font-size:0.8rem}
+
+        /* Scroll animations */
+        .reveal{opacity:0;transform:translateY(40px);transition:all 0.8s cubic-bezier(0.16,1,0.3,1)}
+        .reveal.visible{opacity:1;transform:translateY(0)}
+
+        @media(max-width:768px){
+            .hero h1{letter-spacing:-1px}
+            .nav-links{display:none!important}
+            .hero-visual{display:none}
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="hp-nav" id="hpNav">
+    <div class="container d-flex justify-content-between align-items-center">
+        <a href="{% url 'homepage' %}" class="nav-brand">CMS<span>PRO</span></a>
+        <div class="d-flex align-items-center nav-links">
+            <a href="#features">Features</a>
+            <a href="#stats">Stats</a>
+            <a href="{% url 'login' %}" class="btn-nav ms-3">Sign In <i class="fas fa-arrow-right ms-1 small"></i></a>
+        </div>
+        <a href="{% url 'login' %}" class="btn-nav d-lg-none">Sign In</a>
+    </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+    <div class="hero-bg">
+        <div class="hero-orb o1"></div>
+        <div class="hero-orb o2"></div>
+        <div class="hero-orb o3"></div>
+    </div>
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6 hero-content">
+                <div class="hero-badge">
+                    <span class="dot"></span> Enterprise-Grade Platform
+                </div>
+                <h1>Resolve Issues<br><span class="gradient">10x Faster.</span></h1>
+                <p class="hero-sub">The next generation complaint management system designed for modern enterprises. Track, assign, resolve — all in one premium dashboard.</p>
+                <div class="hero-actions">
+                    <a href="{% url 'register' %}" class="btn-hero primary">
+                        Get Started Free <i class="fas fa-arrow-right"></i>
+                    </a>
+                    <a href="{% url 'login' %}" class="btn-hero outline">
+                        <i class="fas fa-play"></i> Sign In
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 hero-visual">
+                <div class="hero-card">
+                    <div class="d-flex align-items-center gap-2 mb-4">
+                        <div style="width:12px;height:12px;border-radius:50%;background:#ef4444"></div>
+                        <div style="width:12px;height:12px;border-radius:50%;background:#f59e0b"></div>
+                        <div style="width:12px;height:12px;border-radius:50%;background:#10b981"></div>
+                        <span class="ms-2 text-secondary" style="font-size:0.7rem;font-weight:600">Live Dashboard</span>
+                    </div>
+                    <div class="mock-row">
+                        <div class="mock-dot" style="background:#f59e0b;box-shadow:0 0 8px rgba(245,158,11,0.4)"></div>
+                        <div class="mock-bar" style="background:rgba(255,255,255,0.08);width:60%"></div>
+                        <div class="mock-badge" style="background:rgba(245,158,11,0.1);color:#f59e0b;border:1px solid rgba(245,158,11,0.2)">Open</div>
+                    </div>
+                    <div class="mock-row">
+                        <div class="mock-dot" style="background:#22d3ee;box-shadow:0 0 8px rgba(34,211,238,0.4)"></div>
+                        <div class="mock-bar" style="background:rgba(255,255,255,0.08);width:80%"></div>
+                        <div class="mock-badge" style="background:rgba(34,211,238,0.1);color:#22d3ee;border:1px solid rgba(34,211,238,0.2)">In Progress</div>
+                    </div>
+                    <div class="mock-row">
+                        <div class="mock-dot" style="background:#10b981;box-shadow:0 0 8px rgba(16,185,129,0.4)"></div>
+                        <div class="mock-bar" style="background:rgba(255,255,255,0.08);width:45%"></div>
+                        <div class="mock-badge" style="background:rgba(16,185,129,0.1);color:#10b981;border:1px solid rgba(16,185,129,0.2)">Resolved</div>
+                    </div>
+                    <div class="mock-row">
+                        <div class="mock-dot" style="background:var(--primary);box-shadow:0 0 8px var(--glow)"></div>
+                        <div class="mock-bar" style="background:rgba(255,255,255,0.08);width:70%"></div>
+                        <div class="mock-badge" style="background:rgba(99,102,241,0.1);color:var(--primary);border:1px solid rgba(99,102,241,0.2)">Assigned</div>
+                    </div>
+                    <div class="d-flex gap-3 mt-4 pt-3" style="border-top:1px solid rgba(255,255,255,0.05)">
+                        <div class="text-center flex-fill p-2 rounded-3" style="background:rgba(255,255,255,0.03)">
+                            <div style="font-size:1.3rem;font-weight:800;color:#fff">{{ stats.total_complaints|default:"0" }}</div>
+                            <div style="font-size:0.6rem;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Total</div>
+                        </div>
+                        <div class="text-center flex-fill p-2 rounded-3" style="background:rgba(255,255,255,0.03)">
+                            <div style="font-size:1.3rem;font-weight:800;color:#10b981">{{ stats.total_resolved|default:"0" }}</div>
+                            <div style="font-size:0.6rem;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Resolved</div>
+                        </div>
+                        <div class="text-center flex-fill p-2 rounded-3" style="background:rgba(255,255,255,0.03)">
+                            <div style="font-size:1.3rem;font-weight:800;color:#f59e0b">{% if stats.avg_rating %}{{ stats.avg_rating }}★{% else %}—{% endif %}</div>
+                            <div style="font-size:0.6rem;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Rating</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats -->
+<section class="stats-section" id="stats">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-6 col-lg-3 reveal">
+                <div class="stat-box">
+                    <div class="stat-num" data-count="{{ stats.total_complaints|default:'0' }}">0</div>
+                    <div class="stat-label">Complaints Tracked</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3 reveal">
+                <div class="stat-box">
+                    <div class="stat-num" data-count="{{ stats.total_resolved|default:'0' }}">0</div>
+                    <div class="stat-label">Issues Resolved</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3 reveal">
+                <div class="stat-box">
+                    <div class="stat-num" data-count="{{ stats.total_users|default:'0' }}">0</div>
+                    <div class="stat-label">Active Users</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3 reveal">
+                <div class="stat-box">
+                    <div class="stat-num">{% if stats.avg_rating %}{{ stats.avg_rating }}{% else %}5.0{% endif %}</div>
+                    <div class="stat-label">Avg. Satisfaction</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features -->
+<section class="features" id="features">
+    <div class="container">
+        <div class="text-center mb-5 reveal">
+            <div class="section-label">Why CMS Pro?</div>
+            <h2 class="section-title text-white">Built for <span class="gradient">Excellence</span></h2>
+            <p class="section-sub mx-auto">Everything you need to manage complaints at scale, wrapped in a premium experience.</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4 reveal">
+                <div class="feat-card">
+                    <div class="feat-icon" style="background:rgba(99,102,241,0.1);color:var(--primary)"><i class="fas fa-bolt"></i></div>
+                    <h5>Real-Time Tracking</h5>
+                    <p>Live status updates from Open → In Progress → Resolved with full activity timeline for every ticket.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 reveal">
+                <div class="feat-card">
+                    <div class="feat-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b"><i class="fas fa-clock"></i></div>
+                    <h5>SLA Monitoring</h5>
+                    <p>Automated 3-day SLA tracking with overdue alerts. Never miss a deadline with pulsing badge notifications.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 reveal">
+                <div class="feat-card">
+                    <div class="feat-icon" style="background:rgba(16,185,129,0.1);color:#10b981"><i class="fas fa-star"></i></div>
+                    <h5>Star Ratings & Feedback</h5>
+                    <p>Interactive 5-star rating system for resolved complaints. Track customer satisfaction with analytics.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 reveal">
+                <div class="feat-card">
+                    <div class="feat-icon" style="background:rgba(239,68,68,0.1);color:#ef4444"><i class="fas fa-redo"></i></div>
+                    <h5>Re-open Tickets</h5>
+                    <p>Users can re-open resolved complaints if unsatisfied. Reopen count tracked for quality monitoring.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 reveal">
+                <div class="feat-card">
+                    <div class="feat-icon" style="background:rgba(34,211,238,0.1);color:#22d3ee"><i class="fas fa-chart-pie"></i></div>
+                    <h5>Admin Analytics</h5>
+                    <p>Beautiful charts for department distribution and status breakdown. Export all data to CSV instantly.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 reveal">
+                <div class="feat-card">
+                    <div class="feat-icon" style="background:rgba(168,85,247,0.1);color:#a855f7"><i class="fas fa-shield-alt"></i></div>
+                    <h5>Role-Based Access</h5>
+                    <p>Three-tier access control — Admin, Manager, and User roles with tailored dashboards for each.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+    <div class="container reveal">
+        <div class="cta-box">
+            <h2 class="section-title text-white mb-3">Ready to <span class="gradient">Transform</span> Your Workflow?</h2>
+            <p class="section-sub mx-auto mb-4">Join the next generation of complaint management. Free to start.</p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="{% url 'register' %}" class="btn-hero primary">Create Free Account <i class="fas fa-arrow-right"></i></a>
+                <a href="{% url 'login' %}" class="btn-hero outline">Sign In</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="hp-footer">
+    <div class="container">
+        <p class="mb-0">© 2026 <strong>CMS<span style="color:var(--primary)">PRO</span></strong> — Enterprise Complaint Management System. All rights reserved.</p>
+    </div>
+</footer>
+
+<script>
+// Navbar scroll effect
+window.addEventListener('scroll',()=>{
+    document.getElementById('hpNav').classList.toggle('scrolled',window.scrollY>50);
+});
+
+// Scroll reveal
+const observer=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');observer.unobserve(e.target)}});
+},{threshold:0.15});
+document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+
+// Counter animation
+const counters=document.querySelectorAll('.stat-num[data-count]');
+const counterObserver=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+        if(e.isIntersecting){
+            const target=parseInt(e.target.dataset.count);
+            let current=0;
+            const increment=Math.max(1,Math.floor(target/40));
+            const timer=setInterval(()=>{
+                current+=increment;
+                if(current>=target){current=target;clearInterval(timer)}
+                e.target.textContent=current;
+            },30);
+            counterObserver.unobserve(e.target);
+        }
+    });
+},{threshold:0.5});
+counters.forEach(c=>counterObserver.observe(c));
+
+// Smooth scroll
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+    a.addEventListener('click',e=>{
+        e.preventDefault();
+        const target=document.querySelector(a.getAttribute('href'));
+        if(target)target.scrollIntoView({behavior:'smooth'});
+    });
+});
+</script>
+</body>
+</html>

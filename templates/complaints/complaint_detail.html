@@ -16,10 +16,20 @@
                     </span>
                     <h2 class="display-6 fw-800 text-white mb-0" style="letter-spacing: -1px;">{{ complaint.title }}</h2>
                 </div>
-                <div class="text-end">
+                <div class="text-end d-flex flex-column align-items-end gap-2">
                     <div class="badge-pill bg-{{ complaint.status|lower }} px-4 py-2 fs-6">
                         {{ complaint.get_status_display }}
                     </div>
+                    {% if complaint.is_overdue %}
+                    <span class="badge rounded-pill px-3 py-2 small fw-bold" style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white; animation: pulse-badge 2s infinite; box-shadow: 0 0 10px rgba(239,68,68,0.3);">
+                        <i class="fas fa-exclamation-triangle me-1"></i>SLA OVERDUE ({{ complaint.days_open }}d)
+                    </span>
+                    {% endif %}
+                    {% if complaint.reopen_count > 0 %}
+                    <span class="badge rounded-pill px-3 py-1 small fw-bold" style="background: rgba(251,191,36,0.15); color: #f59e0b; border: 1px solid rgba(251,191,36,0.3);">
+                        <i class="fas fa-redo me-1"></i>Re-opened ×{{ complaint.reopen_count }}
+                    </span>
+                    {% endif %}
                 </div>
             </div>
             
@@ -53,6 +63,15 @@
                     </div>
                 </div>
             </div>
+
+            {% if complaint.attachment %}
+            <div class="mt-4 pt-4" style="border-top: 1px solid rgba(255,255,255,0.06);">
+                <h6 class="text-secondary small fw-800 text-uppercase mb-3" style="letter-spacing: 0.1em;"><i class="fas fa-paperclip me-2 text-primary-accent"></i>Attachment</h6>
+                <a href="{{ complaint.attachment.url }}" target="_blank" class="d-inline-flex align-items-center gap-2 px-4 py-2 rounded-pill text-white small fw-bold" style="background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.3); text-decoration: none; transition: all 0.3s;" onmouseover="this.style.background='rgba(99,102,241,0.25)'" onmouseout="this.style.background='rgba(99,102,241,0.12)'">
+                    <i class="fas fa-file-download text-primary-accent"></i> {{ complaint.attachment.name|slice:"12:" }}
+                </a>
+            </div>
+            {% endif %}
         </div>
 
         {% if user.role in 'ADMIN,MANAGER' and user == complaint.assigned_to or user.role == 'ADMIN' %}
@@ -70,6 +89,7 @@
 
             <form method="post">
                 {% csrf_token %}
+                <input type="hidden" name="action" value="update">
                 
                 <div class="row g-4">
                     {% if user.role == 'ADMIN' %}
@@ -105,6 +125,78 @@
                     Sync Updates <i class="fas fa-sync-alt ms-2 small"></i>
                 </button>
             </form>
+        </div>
+        {% endif %}
+
+        {% if complaint.status == 'RESOLVED' and complaint.created_by == user and not existing_rating %}
+        <!-- Re-open Complaint Button -->
+        <div class="card-glass p-4 mt-4 stagger-3 fade-in-up" style="border-radius: 24px; border-color: rgba(239,68,68,0.3);">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-3 rounded-circle" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;background:rgba(239,68,68,0.12);">
+                        <i class="fas fa-redo text-danger"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-0 text-white fw-800">Not Satisfied?</h6>
+                        <p class="text-secondary small mb-0">Re-open this complaint if the issue persists</p>
+                    </div>
+                </div>
+                <form method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="reopen">
+                    <button type="submit" class="btn btn-outline-danger px-4 py-2 rounded-pill fw-bold" onclick="return confirm('Are you sure you want to re-open this complaint?')">
+                        <i class="fas fa-redo me-2"></i>Re-Open Ticket
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if rating_form %}
+        <!-- Star Rating Card -->
+        <div class="card-glass p-5 mt-4 stagger-4 fade-in-up" style="border-radius: 24px; border-color: rgba(251,191,36,0.3);">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="p-3 rounded-circle" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;background:rgba(251,191,36,0.12);">
+                    <i class="fas fa-star text-warning"></i>
+                </div>
+                <div>
+                    <h5 class="mb-0 text-white fw-800">Rate Your Experience</h5>
+                    <p class="text-secondary small mb-0">Your feedback helps us improve</p>
+                </div>
+            </div>
+            <form method="post" id="ratingForm">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="rate">
+                {{ rating_form.stars }}
+                <div class="d-flex gap-2 mb-4" id="starWidget">
+                    {% for i in "12345" %}
+                    <i class="fas fa-star fs-2 star-btn" data-val="{{ forloop.counter }}" style="cursor:pointer;color:#334155;transition:color 0.2s;"></i>
+                    {% endfor %}
+                </div>
+                <div class="mb-4">{{ rating_form.feedback }}</div>
+                <button type="submit" class="btn btn-premium px-5 py-3" id="ratingSubmitBtn" disabled>
+                    Submit Feedback <i class="fas fa-paper-plane ms-2 small"></i>
+                </button>
+            </form>
+        </div>
+        {% endif %}
+
+        {% if existing_rating %}
+        <!-- Rating Already Given -->
+        <div class="card-glass p-4 mt-4" style="border-radius: 24px; border-color: rgba(251,191,36,0.3);">
+            <div class="d-flex align-items-center gap-3">
+                <i class="fas fa-star text-warning fs-3"></i>
+                <div>
+                    <div class="text-white fw-bold mb-1">You rated this complaint</div>
+                    <div class="d-flex gap-1">
+                        {% for i in "12345" %}
+                        <i class="fas fa-star small {% if forloop.counter <= existing_rating.stars %}text-warning{% else %}text-secondary{% endif %}"></i>
+                        {% endfor %}
+                        <span class="text-secondary small ms-2">{{ existing_rating.stars }}/5</span>
+                    </div>
+                    {% if existing_rating.feedback %}<p class="text-secondary small mt-2 mb-0">"{{ existing_rating.feedback }}"</p>{% endif %}
+                </div>
+            </div>
         </div>
         {% endif %}
     </div>
@@ -153,5 +245,37 @@
 
 <style>
     .x-small { font-size: 0.7rem; }
+    .star-btn:hover, .star-btn.active { color: #f59e0b !important; transform: scale(1.15); }
+    .star-btn { transition: color 0.2s, transform 0.2s; }
 </style>
 {% endblock %}
+
+{% block extra_js %}
+{% if rating_form %}
+<script>
+    const stars = document.querySelectorAll('.star-btn');
+    const input = document.getElementById('rating-stars-input');
+    const submitBtn = document.getElementById('ratingSubmitBtn');
+
+    stars.forEach(star => {
+        star.addEventListener('mouseover', () => {
+            const val = parseInt(star.dataset.val);
+            stars.forEach((s, i) => s.style.color = i < val ? '#f59e0b' : '#334155');
+        });
+        star.addEventListener('mouseout', () => {
+            const selected = input.value ? parseInt(input.value) : 0;
+            stars.forEach((s, i) => s.style.color = i < selected ? '#f59e0b' : '#334155');
+        });
+        star.addEventListener('click', () => {
+            input.value = star.dataset.val;
+            submitBtn.disabled = false;
+            stars.forEach((s, i) => {
+                s.style.color = i < parseInt(star.dataset.val) ? '#f59e0b' : '#334155';
+                s.classList.toggle('active', i < parseInt(star.dataset.val));
+            });
+        });
+    });
+</script>
+{% endif %}
+{% endblock %}
+
