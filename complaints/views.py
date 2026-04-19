@@ -101,7 +101,17 @@ def complaint_create(request):
             return redirect('complaint_list')
     else:
         form = ComplaintForm()
-    return render(request, 'complaints/complaint_form.html', {'form': form})
+    
+    # Get overdue count for notification bell
+    if request.user.role == 'ADMIN':
+        all_complaints = Complaint.objects.all()
+    elif request.user.role == 'MANAGER':
+        all_complaints = Complaint.objects.filter(assigned_to=request.user)
+    else:
+        all_complaints = Complaint.objects.filter(created_by=request.user)
+    overdue_count = sum(1 for c in all_complaints if c.is_overdue)
+    
+    return render(request, 'complaints/complaint_form.html', {'form': form, 'overdue_count': overdue_count})
 
 @login_required
 def complaint_detail(request, pk):
@@ -186,11 +196,21 @@ def complaint_detail(request, pk):
                     )
             return redirect('complaint_detail', pk=pk)
 
+    # Get overdue count for notification bell
+    if request.user.role == 'ADMIN':
+        all_complaints = Complaint.objects.all()
+    elif request.user.role == 'MANAGER':
+        all_complaints = Complaint.objects.filter(assigned_to=request.user)
+    else:
+        all_complaints = Complaint.objects.filter(created_by=request.user)
+    overdue_count = sum(1 for c in all_complaints if c.is_overdue)
+
     return render(request, 'complaints/complaint_detail.html', {
         'complaint': complaint,
         'managers': managers,
         'rating_form': rating_form,
         'existing_rating': existing_rating,
+        'overdue_count': overdue_count,
     })
 
 @login_required
