@@ -6,8 +6,15 @@ from django.db.models import Count, Avg
 from django.http import HttpResponse
 from django.utils import timezone
 import csv
+import io
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter, landscape
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from .models import User, Complaint, ComplaintRemark, ComplaintRating
 from .forms import ComplaintForm, RatingForm
+
 
 
 def homepage(request):
@@ -267,4 +274,88 @@ def export_complaints_csv(request):
             c.reopen_count,
             rating,
         ])
+    return response
+
+@login_required
+def export_complaints_pdf(request):
+    """Admin-only: Export all complaints to a professional PDF report"""
+    if request.user.role != 'ADMIN':
+        return redirect('dashboard')
+
+    # Create the HttpResponse object with the appropriate PDF headers.
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="complaints_report_{timezone.now().strftime("%Y%m%d_%H%M")}.pdf"'
+
+    # Create a buffer for the PDF
+    buffer = io.BytesIO()
+
+    # Create the PDF object, using the buffer as its "file."
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(letter), rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=18)
+    elements = []
+
+    # Styles
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'TitleStyle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        textColor=colors.HexColor("#6366f1"),
+        alignment=1,
+        spaceAfter=30
+    )
+
+    # Title
+    elements.append(Paragraph("CMS PRO — Enterprise Complaint Report", title_style))
+    elements.append(Paragraph(f"Generated on: {timezone.now().strftime('%B %d, %Y %H:%M')}", styles['Normal']))
+    elements.append(Spacer(1, 20))
+
+    # Data for the table
+    data = [['Ref ID', 'Title', 'Category', 'Status', 'Raised By', 'Assigned To', 'Created At', 'Rating']]
+    
+    complaints = Complaint.objects.select_related('created_by', 'assigned_to').prefetch_related('rating').all().order_by('-created_at')
+    
+    for c in complaints:
+        try:
+            rating = f"{c.rating.stars}★"
+        except Exception:
+            rating = 'N/A'
+            
+        data.append([
+            f'REF-{c.id:05d}',
+            Paragraph(c.title[:30], styles['Normal']),
+            c.get_category_display(),
+            c.get_status_display(),
+            c.created_by.username,
+            c.assigned_to.username if c.assigned_to else 'Unassigned',
+            c.created_at.strftime('%Y-%m-%d'),
+            rating
+        ])
+
+    # Create table
+    table = Table(data, colWidths=[60, 150, 80, 70, 70, 70, 70, 50])
+    
+    # Add style to table
+    style = TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#1e293b")),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor("#f8fafc")),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ])
+    table.setStyle(style)
+    
+    elements.append(table)
+
+    # Build PDF
+    doc.build(elements)
+
+    # Get the value of the BytesIO buffer and write it to the response.
+    pdf = buffer.getvalue()
+    buffer.close()
+    response.write(pdf)
+
     return response

@@ -8,7 +8,9 @@ urlpatterns = [
     path('complaints/create/', views.complaint_create, name='complaint_create'),
     path('complaints/<int:pk>/', views.complaint_detail, name='complaint_detail'),
     path('complaints/export/', views.export_complaints_csv, name='export_csv'),
+    path('complaints/export-pdf/', views.export_complaints_pdf, name='export_pdf'),
     path('register/', views.register, name='register'),
+
     path('logout/', views.user_logout, name='user_logout'),
 ]
 

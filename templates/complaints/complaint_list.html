@@ -11,7 +11,11 @@
         <a href="{% url 'export_csv' %}" class="btn btn-outline-secondary btn-sm px-4 rounded-pill border-secondary" title="Export CSV">
             <i class="fas fa-file-csv me-2"></i>Export CSV
         </a>
+        <a href="{% url 'export_pdf' %}" class="btn btn-outline-danger btn-sm px-4 rounded-pill border-danger" title="Export PDF">
+            <i class="fas fa-file-pdf me-2"></i>Export PDF
+        </a>
         {% endif %}
+
         <a href="{% url 'complaint_create' %}" class="btn btn-premium btn-sm px-4">
             <i class="fas fa-plus me-2"></i> Raise Complaint
         </a>

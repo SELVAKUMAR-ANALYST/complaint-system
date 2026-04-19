@@ -37,7 +37,7 @@
 - **SLA Overdue System** — Auto-detects complaints open for 3+ days with pulsing red alerts
 - **Star Rating System** — Interactive 5-star feedback widget for resolved complaints
 - **Re-open Tickets** — Users can re-open unsatisfactory resolutions with tracked count
-- **CSV Export** — Admin can download all complaint data as CSV with one click
+- **CSV & PDF Export** — Admin can download all complaint data as CSV or a professional PDF report with one click
 
 ---
 
@@ -80,10 +80,11 @@
 - Auto-creates a remark in the activity timeline
 - Reopen count tracked and displayed on cards
 
-### 📤 CSV Export (Admin)
-- One-click export of all complaint data
-- Includes: Ref ID, Title, Category, Status, Assigned To, Days Open, Overdue flag, Rating
-- Timestamped filename for versioning
+### 📤 CSV & PDF Export (Admin)
+- One-click export of all complaint data to CSV or PDF
+- Professional PDF report includes: Ref ID, Title, Category, Status, Assigned To, Created At, and Rating
+- Timestamped filenames for easy tracking
+
 
 ### 🔔 Notification System
 - Bell icon in navbar shows overdue complaint count
